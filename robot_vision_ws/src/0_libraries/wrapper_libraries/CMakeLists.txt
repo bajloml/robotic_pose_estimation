@@ -65,7 +65,6 @@ include_directories(
   include
   ${OpenCV_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
-  /home/ros-industrial/Desktop/ROS_WS/src/pugixml/pugixml/src/
 )
 
 add_library(${PROJECT_NAME}
