@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="calibration_world">
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <!-- a circle grid which has to calibrated in a way that one circle has a diameter of 0.034
+		 to check if a circle diameter is 0.034m use cylinder_measure model-->
+    <!-- <include> -->
+	  <!-- <uri>model://circlegrid</uri> -->
+	  <!-- <name>circlegrid plate</name> -->
+      <!-- <pose>0.0 0.0 1.0 0 0 0</pose> -->
+    <!-- </include> -->
+	
+  <!--      
+    <include>
+      <uri>model://measure_line</uri>
+      <name>measure_line</name>
+        <pose>0.0 1.0 1.0 0 0 0</pose>
+    </include>
+-->
+	
+  <!--  -->
+	  <include>
+	    <uri>model://opencv_chessboard</uri>
+	    <name>opencv_chessboard plate</name>
+      <pose>1.0 0.0 1.0 3.14 0 0</pose>
+    </include>
+
+    	<include>
+	    <uri>model://sphere</uri>
+	    <name>sphere</name>
+      <pose>1.0 0.0 1.0 0 0 0</pose>
+    </include>
+
+    <include>
+	    <uri>model://directional_light</uri>
+    </include>
+ <!--   
+    <include>
+	    <uri>model://cube_50mm</uri>
+	    <name>cube_50mm</name>
+      <pose>1.0 0.0 0.5 0 0 0</pose>
+    </include>
+-->
+  </world>
+</sdf>

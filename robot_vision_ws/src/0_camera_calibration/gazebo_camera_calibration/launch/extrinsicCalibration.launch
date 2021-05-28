@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name = "fromFrame"         default = ""></arg>
+    <arg name = "toFrame"           default = ""></arg>
+    <arg name = "savePath"          default = ""></arg>
+    <arg name = "cameraImageTopic"  default = ""></arg>
+    <arg name = "publishPoseMarker" default = ""></arg>
+
+	<!--start transformation node-->
+    <node name="getPoseImage" pkg="gazebo_camera_calibration" type="getPoseImage_node" output="screen">
+        <param name = "fromFrame"           value="$(arg fromFrame)" 	        type="string"></param>
+        <param name = "toFrame"             value="$(arg toFrame)"		        type="string"></param>
+        <param name = "savePath"            value="$(arg savePath)"	            type="string"></param>
+        <param name = "cameraImageTopic"    value="$(arg cameraImageTopic)"	    type="string"></param>
+        <param name = "publishPoseMarker"   value="$(arg publishPoseMarker)"	type="bool"></param>
+    </node>
+</launch>

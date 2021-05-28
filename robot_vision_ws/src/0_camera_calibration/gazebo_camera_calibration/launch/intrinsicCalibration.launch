@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name = "pathToImages"  default = ""></arg>
+    <arg name = "savePath"      default = ""></arg>
+    <arg name = "showImages"    default = ""></arg>
+
+	<!--start transformation node-->
+    <node name="intrinsic_calibration" pkg="gazebo_camera_calibration" type="intrinsic_calibration_node" output="screen">
+        <param name = "pathToImages"  value="$(arg pathToImages)" 	type="string"></param>
+        <param name = "savePath"      value="$(arg savePath)"	    type="string"></param>
+        <param name = "showImages"    value="$(arg showImages)"     type="bool">></param>
+    </node>
+
+</launch>
