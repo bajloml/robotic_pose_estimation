@@ -39,6 +39,7 @@ def image_callback(msg, args):
     parent = args[1] 
     model = args[2]
     ps_prediction = args[3]
+    debug_image = args[4]
 
     try:
         # Convert your ROS Image message to OpenCV2
@@ -67,14 +68,21 @@ def image_callback(msg, args):
         br = tf.TransformBroadcaster()
         #publishing transform between child and parent
         print("Publishing transform between [{}] --> [{}]".format(parent, child))
-        br.sendTransform((tran_pred[0], tran_pred[1], -tran_pred[2]),
+        br.sendTransform((-tran_pred[0], -tran_pred[1], -tran_pred[2]),
                         tf.transformations.quaternion_from_euler(rot_pred[0], rot_pred[1], rot_pred[2]),
                         rospy.Time.now(),
                         child,
                         parent)
-        #save image
-        test_img = Img.fromarray(test_img)
-        test_img.save(os.path.join( "", 'test.png'))
+        
+        if debug_image:
+            #get current dir path
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            img_path = os.path.join( dir_path, 'test.png')
+            #save image
+            print('Saving image on path: {}'.format(img_path))
+            test_img = Img.fromarray(test_img)
+            test_img.save(os.path.join( img_path))
+
     except CvBridgeError as e:
         print(e)
 
@@ -86,6 +94,7 @@ def listener(model, node_name):
     #parent="fixed_camera_link"
     #camsettings = "/home/ros/Desktop/tensorflow_model/camera_object_settings/_camera_settings.json"
     #objsettings = "/home/ros/Desktop/tensorflow_model/camera_object_settings/_object_settings.json"
+    #debug_image = 'True'
 
     #get parameters from parameter server
     camsettings = rospy.get_param("{}/camera_settings".format(node_name))
@@ -93,6 +102,7 @@ def listener(model, node_name):
     child = rospy.get_param("{}/child".format(node_name))
     parent = rospy.get_param("{}/parent".format(node_name))
     sub_topic = rospy.get_param("{}/camera_topic".format(node_name))
+    debug_image = rospy.get_param("{}/debugImage".format(node_name))
     
     #print parameters
     print("camera settings: {}".format(camsettings))
@@ -100,25 +110,18 @@ def listener(model, node_name):
     print("child name: {}".format(child))
     print("parent name: {}".format(parent))
     print("camera topic: {}".format(sub_topic))
+    print("debug image: {}".format(debug_image))
 
     ps_prediction = positionSolver(camsettings, objsettings, True, text_width_ratio=0.01, text_height_ratio=0.1, 
                                     text = 'Logit',  belColor = (0, 255, 0), affColor = (0, 255, 0)) 
 
     # Define your image subscriber
-    rospy.Subscriber(sub_topic, Image, image_callback, (child, parent, model, ps_prediction), queue_size=1, buff_size=2**24)
+    rospy.Subscriber(sub_topic, Image, image_callback, (child, parent, model, ps_prediction, debug_image), queue_size=1, buff_size=2**24)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
 if __name__ == '__main__':
-    """
-    if(opt.model=='featureModel'):
-        tf.print('Creating feature model')
-        netModel = featureModel(pretrained=True, blocks=6, numFeatures=512, freezeLayers=14,)
-    elif(opt.model=='residualModel'):
-        tf.print('Creating residual model')
-        netModel = residualModel(pretrained=True, blocks=6, freezeLayers=14,)
-    """
 
     #init node
     rospy.init_node('object_pose_publisher', anonymous=True)
