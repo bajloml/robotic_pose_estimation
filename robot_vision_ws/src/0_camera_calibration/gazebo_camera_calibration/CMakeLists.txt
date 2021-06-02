@@ -34,7 +34,6 @@ catkin_package(
   roscpp
   rospy 
   std_msgs
-  tf
   wrapper_libraries
 #  DEPENDS system_lib
 )

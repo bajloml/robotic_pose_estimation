@@ -4,7 +4,11 @@
 #include <string>
 
 //  ros includes
-#include <tf/transform_listener.h>
+//#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/convert.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
 
 //  eigen transformation
@@ -23,16 +27,15 @@ class PoseSaver{
     bool saved_;
     std::ofstream yamlFile;
 
-    tf::TransformListener listener_;
-    tf::StampedTransform transform_;
-
-    Eigen::Transform<float, 3, Eigen::Affine> Transformation;
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener listener_;
+    geometry_msgs::TransformStamped transform_;
 
     public:
         PoseSaver(std::string fPe_yamlPoseFileSavePath);
         ~PoseSaver();
 
-        Eigen::Transform<float, 3, Eigen::Affine> saveYamlPoseFile(std::string, std::string, unsigned);
-        Eigen::Transform<float, 3, Eigen::Affine> tfToEigenTransform(tf::StampedTransform);
+        geometry_msgs::Transform saveYamlPoseFile(std::string, std::string, unsigned);
+        Eigen::Transform<float, 3, Eigen::Affine> tfToEigenTransform(geometry_msgs::TransformStamped);
       
 };

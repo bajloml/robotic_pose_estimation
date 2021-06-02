@@ -62,7 +62,7 @@ int main(int argc, char** argv){
     MarkerDebug markerDebug(toFrame);
 
     // eigne transform, used to show the marker in rviz
-    Eigen::Transform<float, 3, Eigen::Affine> transform; 
+    geometry_msgs::Transform transform; 
 
     while (node.ok() && ros::ok()){
         ROS_INFO("POSE/IMAGE PAIR COUNTER INITIALIZED: %i ", cpt);
@@ -85,7 +85,7 @@ int main(int argc, char** argv){
 
                 // if rviz markers are used to debug
                 if (publishPoseMarker){
-                    markerDebug.addMarker(markerDebug.EigenTransToPose(transform), "poseFromEigen");
+                    markerDebug.addMarker(markerDebug.geometryTransformToPose(transform), "poseFromPoseImageNode");
                 }
 
                 // save the camera image in this pose

@@ -36,5 +36,6 @@ class MarkerDebug{
         void deleteMarkers();
 
         geometry_msgs::Pose EigenTransToPose(Eigen::Transform<float, 3, Eigen::Affine> transform);
+        geometry_msgs::Pose geometryTransformToPose(geometry_msgs::Transform transform);
 
 };

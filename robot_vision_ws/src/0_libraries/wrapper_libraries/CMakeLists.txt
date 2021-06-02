@@ -11,7 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  tf
+  #tf
+  tf2
+  tf2_ros
+  geometry_msgs
   actionlib_msgs 
   actionlib
   image_transport
@@ -52,6 +55,9 @@ catkin_package(
   cv_bridge 
   moveit_visual_tools 
   rviz_visual_tools
+  # tf2
+  # tf2_ros
+  # geometry_msgs
   # DEPENDS system_lib
 )
 

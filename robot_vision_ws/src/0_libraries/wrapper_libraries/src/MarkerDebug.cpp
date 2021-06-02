@@ -47,3 +47,20 @@ geometry_msgs::Pose MarkerDebug::EigenTransToPose(Eigen::Transform<float, 3, Eig
 
     return pose;
 }
+
+// switch from Eigen Transform to geometry msg pose
+geometry_msgs::Pose MarkerDebug::geometryTransformToPose(geometry_msgs::Transform transform){
+
+    geometry_msgs::Pose pose;
+
+    pose.position.x = transform.translation.x;
+    pose.position.y = transform.translation.y;
+    pose.position.z = transform.translation.z;
+
+    pose.orientation.x = transform.rotation.x;
+    pose.orientation.y = transform.rotation.y;
+    pose.orientation.z = transform.rotation.z;
+    pose.orientation.w = transform.rotation.w;
+
+    return pose;
+}
