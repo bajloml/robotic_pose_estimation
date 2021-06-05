@@ -7,7 +7,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-#help functions
+# help functions
 def create3DCuboidPts(x, y, z):
     """
     creates a cuboid points from the x, y and z dimensions
@@ -206,13 +206,13 @@ def removeZeroCoord(image_points_dict, model_points_dict):
 
     return image_points_dict, model_points_dict
 
-def draw_axis(image, rot, tran, mat_cam):
+def draw_axis(image, rot, tran, mat_cam, dist_coeffs):
     # unit is mm
-    # rot, _ = cv2.Rodrigues(rot)
+    rot, _ = cv2.Rodrigues(rot)
     # points [x,y,z]
 
     points = np.float32([[100, 0, 0], [0, 100, 0], [0, 0, 100], [0, 0, 0]]).reshape(-1, 3)
-    axisPoints, jac = cv2.projectPoints(points, rot, tran, mat_cam, (0, 0, 0, 0))
+    axisPoints, jac = cv2.projectPoints(points, rot, tran, mat_cam, dist_coeffs)
 
     #convert to uint8
     axisPoints = axisPoints.astype(np.uint8)
@@ -279,9 +279,21 @@ def draw_cuboid(image, model_points_2D, color):
 
 class positionSolver():
 
-    def __init__(self, camSettingsJSON, objSettingsJSON, debug, text_width_ratio, text_height_ratio, text='',  belColor = (0, 0, 255), affColor = (0, 255, 255)):
+    def __init__(self,
+                 camSettingsJSON,
+                 cameraSettings_cv_path,
+                 use_opencv_intrinsics,
+                 objSettingsJSON,
+                 debug,
+                 text_width_ratio,
+                 text_height_ratio,
+                 text='',
+                 belColor=(0, 0, 255),
+                 affColor=(0, 255, 255)):
         
         self.camSettingsJSON = camSettingsJSON
+        self.cameraSettings_cv_path = cameraSettings_cv_path
+        self.use_opencv_intrinsics = use_opencv_intrinsics
         self.objSettingsJSON = objSettingsJSON
         self.belColor = belColor
         self.affColor = affColor
@@ -291,18 +303,26 @@ class positionSolver():
         self.debug = debug
         self.dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
-        #read camera json file
-        camera_matrix_path = self.camSettingsJSON
-        with open(camera_matrix_path) as data_file:
-            json_camera_matrix = json.load(data_file)
+        # camera settings from ndds
+        if not self.use_opencv_intrinsics:
+            # read camera json file
+            camera_matrix_path = self.camSettingsJSON
+            with open(camera_matrix_path) as data_file:
+                json_camera_matrix = json.load(data_file)
 
-        # Initialize parameters
-        self.matrix_camera = np.zeros((3, 3))
-        self.matrix_camera[0, 0] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['fx']
-        self.matrix_camera[1, 1] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['fy']
-        self.matrix_camera[0, 2] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['cx']
-        self.matrix_camera[1, 2] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['cy']
-        self.matrix_camera[2, 2] = 1
+            # Initialize camera parameters
+            self.matrix_camera = np.zeros((3, 3))
+            self.matrix_camera[0, 0] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['fx']
+            self.matrix_camera[1, 1] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['fy']
+            self.matrix_camera[0, 2] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['cx']
+            self.matrix_camera[1, 2] = json_camera_matrix['camera_settings'][0]['intrinsic_settings']['cy']
+            self.matrix_camera[2, 2] = 1
+        
+        # camera settings from opencv
+        if self.use_opencv_intrinsics:
+            self.CamSettings = cv2.FileStorage(self.cameraSettings_cv_path, cv2.FILE_STORAGE_READ)
+            self.matrix_camera = self.CamSettings.getNode("intrinsic_settings").mat()
+            self.dist_coeffs = self.CamSettings.getNode("dist").mat()
 
         #Fixed model transform
         object_sett_path = self.objSettingsJSON
@@ -350,11 +370,11 @@ class positionSolver():
         #affPointsOnImage = addCoordOnImage(image=img, image_points=aff_image_points, imgName='affinity', scale=aff_scale, color=self.affColor)
 
         (success, rot_v, tran_v) = cv2.solvePnP(objectPoints=np.array(list(model_points_dict_3D.values()), dtype=np.float32),
-                                        # imagePoints=(np.array(list(aff_image_points_dict.values()), dtype=np.float32) * aff_scale),
-                                        imagePoints=(np.array(list(bel_image_points_dict.values()), dtype=np.float32) * bel_scale),
-                                        cameraMatrix=self.matrix_camera,
-                                        distCoeffs=self.dist_coeffs,
-                                        flags=cv2.SOLVEPNP_ITERATIVE)
+                                                # imagePoints=(np.array(list(aff_image_points_dict.values()), dtype=np.float32) * aff_scale),
+                                                imagePoints=(np.array(list(bel_image_points_dict.values()), dtype=np.float32) * bel_scale),
+                                                cameraMatrix=self.matrix_camera,
+                                                distCoeffs=self.dist_coeffs,
+                                                flags=cv2.SOLVEPNP_ITERATIVE)
         if success:
             #print('Rotation Vector:\n {}\n'.format(rot_v))
             #print('Translation Vector:\n {}\n'.format(tran_v))
@@ -377,7 +397,7 @@ class positionSolver():
             tensorImg = getBatchImage(tensor_img)
             # draw axis
             if self.debug:
-                tensorImg = draw_axis(tensorImg, rot_v, tran_v, self.matrix_camera)
+                tensorImg = draw_axis(tensorImg, rot_v, tran_v, self.matrix_camera, self.dist_coeffs)
 
                 # get model points projections on the image
                 model_points_dict_2D = getProjectedModel2DPts(model_points_dict_3D, rot_v, tran_v, self.matrix_camera, self.dist_coeffs)
