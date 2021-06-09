@@ -210,7 +210,6 @@ def draw_axis(image, rot, tran, mat_cam, dist_coeffs):
     # unit is mm
     rot, _ = cv2.Rodrigues(rot)
     # points [x,y,z]
-
     points = np.float32([[100, 0, 0], [0, 100, 0], [0, 0, 100], [0, 0, 0]]).reshape(-1, 3)
     axisPoints, jac = cv2.projectPoints(points, rot, tran, mat_cam, dist_coeffs)
 
@@ -222,11 +221,18 @@ def draw_axis(image, rot, tran, mat_cam, dist_coeffs):
     #color conversion
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # x color red
+    # # y color green
+    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[0].ravel()), (0, 255, 0), 2)
+    # # x color red
+    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[1].ravel()), (255, 0, 0), 2)
+    # # z color blue
+    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[2].ravel()), (0, 0, 255), 2)
+
+    # Z color blue
     image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[0].ravel()), (255, 0, 0), 2)
-    # y color green
+    # Y color green
     image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[1].ravel()), (0, 255, 0), 2)
-    # z color blue
+    # X color red
     image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[2].ravel()), (0, 0, 255), 2)
 
     return image
@@ -376,34 +382,33 @@ class positionSolver():
                                                 distCoeffs=self.dist_coeffs,
                                                 flags=cv2.SOLVEPNP_ITERATIVE)
         if success:
-            #print('Rotation Vector:\n {}\n'.format(rot_v))
-            #print('Translation Vector:\n {}\n'.format(tran_v))
+            #conversion left to right coordinate system
+            rot_v_right = np.zeros((3,1), dtype=np.float)
+            tran_v_right = np.zeros((3,1), dtype=np.float)
 
-            x = tran_v[0]
-            y = tran_v[1]
-            z = tran_v[2]
-
-            #if z < 0:
-                # Get the opposite location
-                #tran_v = np.array([-x, -y, -z])
-
-                # # Change the rotation by 180 degree
-                # rotate_angle = np.pi
-                # rotate_quaternion = Quaternion.from_axis_rotation(location, rotate_angle)
-                # quaternion = rotate_quaternion.cross(quaternion)
+            if tran_v[2]<0:
+                #rotation --> change Z-axis direction
+                rot_mat, _ = cv2.Rodrigues(rot_v)
+                rot_mat[2, 2] = -rot_mat[2, 2]
+                rot_v_right, _ = cv2.Rodrigues(rot_mat)
+                #translation
+                tran_v_right [0] = -tran_v[0]
+                tran_v_right [1] = -tran_v[1] 
+                tran_v_right [2] = -tran_v[2]
+            else:
+                rot_v_right = rot_v
+                tran_v_right = tran_v    
 
             # get the image from the dataset
-            #tensorImg = getImage(test_dataset)
             tensorImg = getBatchImage(tensor_img)
             # draw axis
             if self.debug:
-                tensorImg = draw_axis(tensorImg, rot_v, tran_v, self.matrix_camera, self.dist_coeffs)
+                tensorImg = draw_axis(tensorImg, rot_v_right, tran_v, self.matrix_camera, self.dist_coeffs)
 
                 # get model points projections on the image
                 model_points_dict_2D = getProjectedModel2DPts(model_points_dict_3D, rot_v, tran_v, self.matrix_camera, self.dist_coeffs)
 
                 # draw point projections on the image
-                #projPts_color = (0, 0, 255)     # (BGR) red
                 tensorImg = addCoordOnImage(image=tensorImg,
                                             image_points=np.array(list(model_points_dict_2D.values()), dtype=np.float32),
                                             #imgName= self.text,
@@ -423,7 +428,6 @@ class positionSolver():
                 tensorImg = tensorImg.astype(np.uint8)
 
                 # Display projected points on image and image points
-                #img_points_projected_points = cv2.hconcat([belPointsOnImage, tensorImg])
                 img_points_projected_points = cv2.hconcat([belPointsOnImage, tensorImg])
                 #cv2.imshow('img_points_projected_points', img_points_projected_points)
                 #cv2.waitKey(0)
@@ -431,4 +435,4 @@ class positionSolver():
         else:
             print("position unresolved \n")
 
-        return rot_v, tran_v, tensorImg, img_points_projected_points
+        return rot_v_right, tran_v_right, tensorImg, img_points_projected_points

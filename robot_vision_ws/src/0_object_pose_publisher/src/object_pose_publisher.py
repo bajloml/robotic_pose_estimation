@@ -5,7 +5,9 @@ import tensorflow as tnsf
 from tensorflow.python.ops.gen_array_ops import parallel_concat_eager_fallback
 #ros for python
 import rospy
+import tf2_ros
 import tf
+import geometry_msgs.msg
 # ROS Image message
 from sensor_msgs.msg import Image
 # ROS Image message -> OpenCV2 image converter
@@ -17,6 +19,10 @@ import sys
 import os
 #PIL
 from PIL import Image as Img
+import numpy as np
+# Import math Library
+import math
+
 
 #custom classes
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes', 'customModel'))
@@ -28,7 +34,30 @@ from featureModel import featureModel
 from residualModel import residualModel
 from positionSolver import positionSolver
 
-from datasetPreparation import datasetPreparation
+
+def getGeometryMsgTransform(parent, child, tran_pred, euler_angles, rot_matrix):
+    
+    t = geometry_msgs.msg.TransformStamped()
+
+    t.header.stamp = rospy.Time.now()
+    t.header.frame_id = parent
+    t.child_frame_id = child
+    t.transform.translation.x = tran_pred[0]
+    t.transform.translation.y = tran_pred[1]
+    t.transform.translation.z = tran_pred[2]
+
+    if (rot_matrix is None) and (euler_angles is not None):
+        quat = tf.transformations.quaternion_from_euler(euler_angles[0], euler_angles[1], euler_angles[2])
+
+    if (rot_matrix is not None) and (euler_angles is None):
+        quat = tf.transformations.quaternion_from_matrix(rot_matrix)
+
+    t.transform.rotation.x = quat[0]
+    t.transform.rotation.y = quat[1]
+    t.transform.rotation.z = quat[2]
+    t.transform.rotation.w = quat[3]
+
+    return t
 
 # Instantiate CvBridge
 bridge = CvBridge()
@@ -45,8 +74,10 @@ def image_callback(msg, args):
         # Convert your ROS Image message to OpenCV2
         #img = bridge.imgmsg_to_cv2(msg, "bgr8")
         img = bridge.imgmsg_to_cv2(msg, "rgb8")
+        #mirror image 
+        #img = cv2.flip(img, 1)
         #resize the image
-        img = cv2.resize(img, (400,400))
+        #img = cv2.resize(img, (400,400))
         #save image
         cv2.imwrite('camera_image.jpeg', img)
         #convert from numpy to tensor
@@ -58,22 +89,43 @@ def image_callback(msg, args):
         #model prediciton
         rot_pred, tran_pred, test_img, _ = ps_prediction.getPosition(logits_beliefs, logits_affinities, img)
 
+        print("rot_pred shape: {}".format(rot_pred.shape))
+        print("tran_pred shape: {}".format(tran_pred.shape))
+
         #print predictions (translation is divided by 1000 because it is in [m] and transform needs to be in [mm])
         tran_pred = tran_pred/1000
+
         tnsf.print("predicted translation is:")
         {tnsf.print("\t\t\t{},".format(tran)) for tran in tran_pred}
         tnsf.print("predicted rotation is:")
         {tnsf.print("\t\t\t{},".format(rot)) for rot in rot_pred}
 
-        br = tf.TransformBroadcaster()
+        #1 solution not working
+        rot, _ = cv2.Rodrigues(rot_pred)
+
+        #projection matrix
+        P = np.hstack((rot,tran_pred))
+        euler_angles = cv2.decomposeProjectionMatrix(P)[6]
+        euler_angles=np.radians([euler_angles[0], euler_angles[1], euler_angles[2]])
+        print ("Euler angles in radians: {}".format(euler_angles))
+
+        #camera position
+        pos_cam = -np.matrix(rot).T * np.matrix(tran_pred)
+        print ("Camera position: {}".format(pos_cam))
+
+        euler_angles[0] = euler_angles[0] + math.pi
+        euler_angles[1] = euler_angles[1]
+        euler_angles[2] = euler_angles[2]
+
+        #create transform for broadcaster
+        t = getGeometryMsgTransform(parent, child, tran_pred, euler_angles, None)
+
+        br = tf2_ros.TransformBroadcaster()
+
         #publishing transform between child and parent
         print("Publishing transform between [{}] --> [{}]".format(parent, child))
-        br.sendTransform((-tran_pred[0], -tran_pred[1], -tran_pred[2]),
-                        tf.transformations.quaternion_from_euler(rot_pred[0], rot_pred[1], rot_pred[2]),
-                        rospy.Time.now(),
-                        child,
-                        parent)
-        
+        br.sendTransform(t)
+
         if debug_image:
             #get current dir path
             dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -90,10 +142,10 @@ def listener(model, node_name):
 
     ####only for debug####
     #sub_topic="/fanuc_1/fixed_camera_pcl/image_raw"
-    #child="thor_hammer"
-    #parent="fixed_camera_link"
-    #camsettings = "/home/ros/Desktop/tensorflow_model/camera_object_settings/_camera_settings.json"
-    #objsettings = "/home/ros/Desktop/tensorflow_model/camera_object_settings/_object_settings.json"
+    #child="thor"
+    #parent="camera"
+    #camsettings = "/home/ros/Desktop/robot_vision_ws/src/0_object_pose_publisher/json/cam_settings.json"
+    #objsettings = "/home/ros/Desktop/robot_vision_ws/src/0_object_pose_publisher/json/_object_settings.json"
     #debug_image = 'True'
 
     #get parameters from parameter server
@@ -112,7 +164,7 @@ def listener(model, node_name):
     print("camera topic: {}".format(sub_topic))
     print("debug image: {}".format(debug_image))
 
-    ps_prediction = positionSolver(camsettings, objsettings, True, text_width_ratio=0.01, text_height_ratio=0.1, 
+    ps_prediction = positionSolver(None, camsettings, True, objsettings, True, text_width_ratio=0.01, text_height_ratio=0.1, 
                                     text = 'Logit',  belColor = (0, 255, 0), affColor = (0, 255, 0)) 
 
     # Define your image subscriber
@@ -128,9 +180,8 @@ if __name__ == '__main__':
     #print node name
     print("Node name: {}".format(rospy.get_name()))
     node_name = rospy.get_name()
-    #print param list
-    #print("Param names: {}".format(rospy.get_param_names()))
 
+    #model_name = 'featureModel'
     #get model class from parameter server
     model_name = rospy.get_param("{}/model_name".format(node_name))
     #create model
@@ -148,6 +199,7 @@ if __name__ == '__main__':
     netModel.build(input_shape=(None, 400, 400, 3))
 
     #get checkpoint path from parameter server
+    #ckptpath = '/home/ros/Desktop/Tensorflow_model/ckpt/testModel_blocks_6/cp.ckpt'
     ckptpath = rospy.get_param("{}/ckptpath".format(node_name))
     tnsf.print('loading weights from: {}'.format(ckptpath))
     #load weight from checkpoint
