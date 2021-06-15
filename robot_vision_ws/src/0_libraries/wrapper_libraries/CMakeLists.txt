@@ -18,8 +18,14 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs 
   actionlib
   image_transport
-  moveit_visual_tools
   rviz_visual_tools
+  #moveit
+  moveit_core
+  moveit_ros_planning
+  moveit_ros_planning_interface
+  pluginlib
+  geometric_shapes
+  moveit_visual_tools
 )
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -71,13 +77,18 @@ include_directories(
   include
   ${OpenCV_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
+  /home/ros-industrial/Desktop/robot_vision_ws/src/pugixml/pugixml/src/
 )
 
 add_library(${PROJECT_NAME}
             src/imageSaver.cpp 
             src/PoseSaver.cpp
             src/MarkerDebug.cpp
-            src/Intrinsic_Cal.cpp)
+            src/Intrinsic_Cal.cpp
+            src/MoveGroupMove.cpp
+            src/RobotGripper.cpp
+            /home/ros-industrial/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.cpp
+            /home/ros-industrial/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.hpp)
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Eigen3::Eigen ${catkin_LIBRARIES})
 

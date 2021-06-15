@@ -29,7 +29,7 @@ class MarkerDebug{
 
     public:
 
-        MarkerDebug(std::string fPe_yamlPoseFileSavePath);
+        MarkerDebug(std::string reference_frame);
         ~MarkerDebug();
 
         void addMarker(geometry_msgs::Pose pose, std::string markerText);
