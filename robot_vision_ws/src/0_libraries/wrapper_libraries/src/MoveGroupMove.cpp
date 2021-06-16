@@ -84,8 +84,8 @@ void MoveGroupMove::moveUsingSetPoseTargets(const std::vector<geometry_msgs::Pos
 
 void MoveGroupMove::moveUsingCartesianPath(const std::vector< geometry_msgs::Pose > &waypoints,
                                            moveit_msgs::RobotTrajectory &trajectory_msg, 
-                                           double eef_step=0.0, 
-                                           double jump_threshold=1.0){
+                                           double eef_step, 
+                                           double jump_threshold){
 
     moveit::core::RobotStatePtr robotStatePtr = _move_group.getCurrentState();
     const robot_state::JointModelGroup *joint_model_group = robotStatePtr->getJointModelGroup(_planningGroup);

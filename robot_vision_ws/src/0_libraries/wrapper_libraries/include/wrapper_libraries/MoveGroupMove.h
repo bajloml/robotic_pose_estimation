@@ -46,7 +46,10 @@ class MoveGroupMove{
         void moveUsingSetPoseTarget(const geometry_msgs::Pose& , moveit::planning_interface::MoveItErrorCode& );
         void moveUsingSetPoseTargets(const std::vector<geometry_msgs::Pose>& , moveit::planning_interface::MoveItErrorCode& );
         void toHome(std::string srdf_path);
-        void moveUsingCartesianPath(const std::vector< geometry_msgs::Pose > &waypoints, moveit_msgs::RobotTrajectory &trajectory_msg, double eef_step, double jump_threshold);
+        void moveUsingCartesianPath(const std::vector< geometry_msgs::Pose > &waypoints, 
+                                    moveit_msgs::RobotTrajectory &trajectory_msg, 
+                                    double eef_step=1.0, 
+                                    double jump_threshold=0.0);
         void moveUsingGrasp( std::string ROBOT_NAME, std::string REFERENCE_FRAME, const geometry_msgs::Pose &wantedPose, 
                              const char* approachAxis, double approachDirection, const char* retreatAxis, double retreatDirection);
         void moveUsingJointState(geometry_msgs::Pose&);
