@@ -89,8 +89,6 @@ void MoveGroupMove::moveUsingCartesianPath(const std::vector< geometry_msgs::Pos
 
     moveit::core::RobotStatePtr robotStatePtr = _move_group.getCurrentState();
     const robot_state::JointModelGroup *joint_model_group = robotStatePtr->getJointModelGroup(_planningGroup);
-    //_move_group.setPoseTarget(pose);
-    //const std::vector< geometry_msgs::Pose > &waypoints, double eef_step, double jump_threshold, moveit_msgs::RobotTrajectory &trajectory, bool avoid_collisions=true, moveit_msgs::MoveItErrorCodes *error_code=NULL
     double fraction = _move_group.computeCartesianPath( waypoints,
                                                         eef_step,
                                                         jump_threshold,
@@ -201,7 +199,7 @@ void MoveGroupMove::toHome(std::string srdf_path){
         return;
     }
     else{
-        std::cout << "Given SRDF file exist" << std::endl;
+        //std::cout << "Given SRDF file exist" << std::endl;
     }
     pugi::xml_node robot = doc.child("robot");
     pugi::xml_node group_state = robot.child("group_state");
@@ -217,13 +215,11 @@ void MoveGroupMove::toHome(std::string srdf_path){
     }
     //fill vector with joint values from srdf file
     for (pugi::xml_node joint = home_pose_node.first_child(); joint; joint = joint.next_sibling()){
-        std::cout << joint.name() << ": " << joint.value() << std::endl;
         if(std::string(joint.name())=="joint"){
                 const pugi::char_t *val = joint.attribute(val_c).value();
                 joints.push_back(atof(val));
         }
     }
-    std::cout << std::endl;
 
     //send move group to home position
     _move_group.setJointValueTarget(joints);

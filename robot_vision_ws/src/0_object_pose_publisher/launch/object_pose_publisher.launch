@@ -2,24 +2,24 @@
 
 <launch>
 
-	<arg name="child"		default="thor"></arg>
-	<arg name="parent"		default="camera"></arg>
+	<arg name="child"			default="thor"></arg>
+	<arg name="parent"			default="camera"></arg>
 	<arg name="camera_topic"	default="/fanuc_1/fixed_camera_pcl/image_raw"></arg>
-	<arg name="camera_settings"	default="/home/ros/Desktop/tensorflow_model/camera_object_settings/_camera_settings.json"></arg>
-	<arg name="object_settings"	default="/home/ros/Desktop/tensorflow_model/camera_object_settings/_object_settings.json"></arg>
+	<arg name="camera_settings"	default="/home/ros/Desktop/robot_vision_ws/src/0_object_pose_publisher/json/cam_settings.json"></arg>
+	<arg name="object_settings"	default="/home/ros/Desktop/robot_vision_ws/src/0_object_pose_publisher/json/_object_settings.json"></arg>
 	<arg name="model_name"		default="featured_model"></arg>
-	<arg name="ckptpath"		default="/home/ros/Desktop/tensorflow_model/DEBUG_FROM_MARKO/feature model/DEBUG_train_folder/ckpt/testModel_blocks_6/cp.ckpt"></arg>
-	<arg name="debugImage"		default="True"></arg>
+	<arg name="ckptpath"		default="/home/ros/Desktop/Tensorflow_model/ckpt06062021/testModel_blocks_6/cp.ckpt"></arg>
+	<arg name="debug"			default="True"></arg>
 	
 	<node pkg="0_object_pose_publisher" name="object_pose_publisher" type="object_pose_publisher.py" output="screen">
-		<param name = "child"			value = "$(arg child)" 		type="string"></param>
-		<param name = "parent"			value = "$(arg parent)" 		type="string"></param>
-		<param name = "camera_topic"		value = "$(arg camera_topic)"		type="string"></param>
+		<param name = "child"			value = "$(arg child)" 				type="string"></param>
+		<param name = "parent"			value = "$(arg parent)" 			type="string"></param>
+		<param name = "camera_topic"	value = "$(arg camera_topic)"		type="string"></param>
 		<param name = "camera_settings"	value = "$(arg camera_settings)"	type="string"></param>
 		<param name = "object_settings"	value = "$(arg object_settings)"	type="string"></param>
-		<param name = "model_name"		value = "$(arg model_name)"		type="string"></param>
-		<param name = "ckptpath"		value = "$(arg ckptpath)"		type="string"></param>
-		<param name = "debugImage"		value = "$(arg debugImage)"		type="bool"></param>
+		<param name = "model_name"		value = "$(arg model_name)"			type="string"></param>
+		<param name = "ckptpath"		value = "$(arg ckptpath)"			type="string"></param>
+		<param name = "debug"			value = "$(arg debug)"				type="bool"></param>
 	</node>
 
 </launch>

@@ -221,13 +221,6 @@ def draw_axis(image, rot, tran, mat_cam, dist_coeffs):
     #color conversion
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # # y color green
-    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[0].ravel()), (0, 255, 0), 2)
-    # # x color red
-    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[1].ravel()), (255, 0, 0), 2)
-    # # z color blue
-    # image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[2].ravel()), (0, 0, 255), 2)
-
     # Z color blue
     image = cv2.line(image, tuple(axisPoints[3].ravel()), tuple(axisPoints[0].ravel()), (255, 0, 0), 2)
     # Y color green
@@ -335,10 +328,6 @@ class positionSolver():
         with open(object_sett_path) as data_file:
             object_sett_matrix = json.load(data_file)
 
-        # Initialize parameters
-        fixed_model_transform = np.array(object_sett_matrix['exported_objects'][0]['fixed_model_transform'])
-        print('fixed model transform: \n{}\n'.format(fixed_model_transform))
-
         # 3D model points. Dimension of the cube around the model (in mm???)
         # should be 16(affinity) or 9(belief) points
         self.obj_dim = object_sett_matrix['exported_objects'][0]['cuboid_dimensions']         # --> cm??
@@ -386,16 +375,18 @@ class positionSolver():
             rot_v_right = np.zeros((3,1), dtype=np.float)
             tran_v_right = np.zeros((3,1), dtype=np.float)
 
-            if tran_v[2]<0:
-                #rotation --> change Z-axis direction
-                rot_mat, _ = cv2.Rodrigues(rot_v)
-                rot_mat[2, 2] = -rot_mat[2, 2]
-                rot_v_right, _ = cv2.Rodrigues(rot_mat)
+            if (tran_v[2]<0):
+                print("Converting from left to right coordinate system")
+                rot_v_right[0] = -rot_v[0]
+                rot_v_right[1] = -rot_v[1]
+                rot_v_right[2] = rot_v[2]
+
                 #translation
                 tran_v_right [0] = -tran_v[0]
-                tran_v_right [1] = -tran_v[1] 
+                tran_v_right [1] = -tran_v[1]
                 tran_v_right [2] = -tran_v[2]
             else:
+                print("right coordinate system")
                 rot_v_right = rot_v
                 tran_v_right = tran_v    
 
