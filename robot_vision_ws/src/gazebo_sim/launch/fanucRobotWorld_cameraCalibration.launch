@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!--******************************************** CHOOSE CALIBRATION TYPE *********************************************************-->
+	<!--PERFORM INTRINSIC CALIBRATION -->
+	<arg name="cv_intrinsicCalibration" 		value="true"></arg>		
+	<arg name="with_images" 			value="true"></arg>
+	
+	<!--EXTRINSIC CALIIBRATION -->
+	<arg name="extrinsicCalibration_Chessboard" 	value="false"></arg>
+	
+	
+	<!--**************************************************** ARGUMENTS ***************************************************************-->
+	<!--*******************************************GAZEBO WORLD PARAMETERS ***********************************************************-->
+	<arg name="paused" 				value = "true"></arg>
+	<arg name="use_sim_time" 			value = "true"></arg>
+	<arg name="gazebo_gui" 			value = "true"></arg>
+	<arg name="gazebo_debug"			value = "false"></arg>
+	<arg name="verbose" 				value = "true"></arg>
+
+	<!--********************************************VIEWER, RECORDER, DEBUGGING ******************************************************-->
+	<arg name="imageViewer"			value = "true"></arg>	<!--start image_viewer node	-->
+	<arg name="imageTopic"				value = "/fanuc_1/fixed_camera_pcl/image_raw"></arg> <!--camera topic	-->
+	<arg name="imageRecorder"			value = "false"></arg>	<!--start image recorder node	-->
+	<arg name="rqt"				value = "false"></arg>	<!--start rqt gui tools node	-->
+	
+	
+	<!--******************************************** CHOOSE ROBOT CONTROLLERS ********************************************************-->
+	<arg name="useVelocityTrajControllers"	value = "false"></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
+	<arg name="useVelocityGroupController"	value = "false" ></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
+																
+	<!--******************************************** ROBOT CONTROLLERS PATH **********************************************************-->
+	<!-- set the controller path -->
+	<arg name="fanuc_arm_controller_path"	value="$(find robot_gripper_model)/config/velTrajectory Controllers/arm_controller.yaml"	if = "$(arg useVelocityTrajControllers)"></arg>
+	<arg name="fanuc_arm_controller_path"	value="$(find robot_gripper_model)/config/velGroupControllers/arm_controller.yaml"	if = "$(arg useVelocityGroupController)"></arg>
+	<arg name="fanuc_arm_controller_path"	value="$(find robot_gripper_model)/config/effortControllers/arm_controller.yaml"	unless = "$(eval (useVelocityTrajControllers or useVelocityGroupController))"></arg>
+
+	<arg name="joint_state_controller_path"   	value="$(find robot_gripper_model)/config/joint_state_controller.yaml"></arg>
+	<arg name="fanuc_gripper_controller_path" 	value="$(find robot_gripper_model)/config/gripper_controller.yaml"></arg>
+	<arg name="gazebo_pid_path" 			value="$(find robot_gripper_model)/config/gazebo_pid.yaml"></arg>
+
+	<!--********************************** URDF/XACRO PATH, ROBOT NAME AND SPAWN POSITION ********************************************-->
+	<arg name="xacro_path"				value = "$(find robot_gripper_model)/urdf/m16ib20_simulation.xacro"></arg>
+	<arg name="robot1_name"			value = "fanuc_1"></arg>
+	<arg name="robot_1_x"				value = "0"></arg>
+	<arg name="robot_1_y"				value = "0"></arg>
+	<arg name="robot_1_z"				value = "0.001"></arg>
+
+
+	<!--***********************************************************************************************************************************-->
+	<!-- WORLD WITH OPENCV CHESSBOARD	INTRINSTIC CALIBRATION-->
+	<arg name="worldName" value="$(find gazebo_sim)/worlds/intrinsic_calibration.world" if="$(arg cv_intrinsicCalibration)"></arg>
+	<!-- WORLD WITH OPENCV CHESSBOARD	EXTRINSIC CALIBRATION-->
+	<arg name="worldName" value="$(find gazebo_sim)/worlds/extrinsic_calibration.world" if="$(arg extrinsicCalibration_Chessboard)"></arg>
+		
+		
+	<!--START INTRINSIC CALIBRATION WITH OPEN CV -->
+	<group if ="$(arg cv_intrinsicCalibration)">
+		<group if ="$(arg with_images)">
+			<include file="$(find gazebo_camera_calibration)/launch/intrinsicCalibration.launch">
+				<arg name = "pathToImages" value="/home/ros/Desktop/robot_vision_ws/src/0_camera_calibration/output_intrinsic_calibration/*.jpg"></arg>
+				<arg name = "savePath"	 value="/home/ros/Desktop/robot_vision_ws/src/0_camera_calibration/output_intrinsic_calibration/"></arg>
+				<arg name = "showImages"   value="1"></arg>
+			</include>
+		</group>
+		
+		
+		<group unless ="$(arg with_images)">
+		
+		<!-- STARTUP SIMULATED WORLD -->
+		<include file="$(find gazebo_ros)/launch/empty_world.launch">
+			<arg name="world_name" 		value = "$(arg worldName)"></arg>
+			<arg name="paused" 			value = "$(arg paused)"></arg>
+			<arg name="use_sim_time" 		value = "$(arg use_sim_time)"></arg>
+			<arg name="gui" 			value = "$(arg gazebo_gui)"></arg>
+			<arg name="debug" 			value = "$(arg gazebo_debug)"></arg>
+			<arg name="verbose" 			value = "$(arg verbose)"></arg>
+		</include>
+		
+		<!--ROBOT 1, SPAWN URDF, CONTROLLERS AND MOVEGROUP UNDER NAMESPACE  -->
+		<!-- SPAWN A ROBOT IN THE WORLD AND LAUNCH THE MOVEGROUP -->
+		<!--if true load velocity controller, otherwise load effort controllers-->
+		<!--if true load velocity controller, otherwise load effort controllers-->	
+		<include file = "$(find robot_gripper_model)/launch/robotCameraGripper_model.launch">
+			<arg name = "xacro_path"			value = "$(arg xacro_path)"></arg>
+			<arg name = "robot_name"			value = "$(arg robot1_name)"></arg>
+			<arg name = "useVelocityTrajControllers"	value = "$(arg useVelocityTrajControllers)"></arg>	
+			<arg name = "useVelocityGroupController"	value = "$(arg useVelocityTrajControllers)"></arg>	
+			<arg name = "robot_1_x"			value = "$(arg robot_1_x)"></arg>
+			<arg name = "robot_1_y"			value = "$(arg robot_1_y)"></arg>
+			<arg name = "robot_1_z"			value = "$(arg robot_1_z)"></arg>
+			<arg name = "fanuc_arm_controller_path"	value = "$(arg fanuc_arm_controller_path)"></arg>
+			<arg name = "joint_state_controller_path"	value = "$(arg joint_state_controller_path)"></arg>
+			<arg name = "fanuc_gripper_controller_path"	value = "$(arg fanuc_gripper_controller_path)"></arg>
+			<arg name = "gazebo_pid_path"			value = "$(arg gazebo_pid_path)"></arg>
+		</include>
+
+		<!--start image viewer node-->
+		<group if="$(arg imageViewer)">
+			<node name="image_view" pkg="image_view" type="image_view" output="screen">
+				<remap from="image" to="/$(arg imageTopic)"/>
+			</node>
+		</group> 
+
+		<!--start image recorder node-->
+		<group if="$(arg imageRecorder)">
+			<node name="image_recorder" pkg="image_view" type="video_recorder" output="screen">
+				<remap from="image"			to="/$(arg imageTopic)"/>
+				<param name = "filename"		value = "/home/ros/Desktop/robot_vision_ws/$(arg robot1_name)_ToolCameraVideo.avi"></param>
+				<param name = "fps" 			value = "24"></param>
+				<param name = "codec"			value = "MJPG"></param>
+				<param name = "encoding" 		value = "bgr8"></param>
+			</node>
+		</group>
+
+		<!-- rqt_console tools -->
+		<group if="$(arg rqt)">
+			<node pkg="rqt_console" name="rqt_console" type="rqt_console">
+			</node>
+		</group>
+
+		<!-- finally start a node which will save image and the pose in the given directory -->
+		<include file="$(find gazebo_camera_calibration)/launch/extrinsicCalibration.launch">		
+			<arg name = "fromFrame"    		value = "tool_gripper_tip"></arg>
+			<arg name = "toFrame"      		value = "base_link"></arg>
+			<arg name = "savePath" 		value = "/home/ros-industrial/Desktop/ROS_WS/src/0_camera_calibration/output_extrinsic_calibration_images_poses/"></arg>
+			<arg name = "cameraImageTopic"	value = "/fanuc_1/cameraEyeInHand/image_raw"></arg>
+			<arg name = "publishPoseMarker" 	value = "1"></arg>
+		</include>	
+		</group>
+	</group>
+
+	<!--START EXTRINSIC CALIBRATIONS
+	start the node to collect the images of chessboard and the images in these nodes
+	Later use these pose-image pairs to feed the "tutorial-chessboard-pose" executable built from the VISP repo -->
+	<group if="$(arg extrinsicCalibration_Chessboard)">
+
+		<!-- STARTUP SIMULATED WORLD -->
+		<include file="$(find gazebo_ros)/launch/empty_world.launch">
+			<arg name="world_name" 		value = "$(arg worldName)"></arg>
+			<arg name="paused" 			value = "$(arg paused)"></arg>
+			<arg name="use_sim_time" 		value = "$(arg use_sim_time)"></arg>
+			<arg name="gui" 			value = "$(arg gazebo_gui)"></arg>
+			<arg name="debug" 			value = "$(arg gazebo_debug)"></arg>
+			<arg name="verbose" 			value = "$(arg verbose)"></arg>
+		</include>
+		
+		<!--ROBOT 1, SPAWN URDF, CONTROLLERS AND MOVEGROUP UNDER NAMESPACE  -->
+		<!-- SPAWN A ROBOT IN THE WORLD AND LAUNCH THE MOVEGROUP -->
+		<!--if true load velocity controller, otherwise load effort controllers-->
+		<!--if true load velocity controller, otherwise load effort controllers-->	
+		<include file = "$(find robot_gripper_model)/launch/robotCameraGripper_model.launch">
+			<arg name = "xacro_path"			value = "$(arg xacro_path)"></arg>
+			<arg name = "robot_name"			value = "$(arg robot1_name)"></arg>
+			<arg name = "useVelocityTrajControllers"	value = "$(arg useVelocityTrajControllers)"></arg>	
+			<arg name = "useVelocityGroupController"	value = "$(arg useVelocityTrajControllers)"></arg>	
+			<arg name = "robot_1_x"			value = "$(arg robot_1_x)"></arg>
+			<arg name = "robot_1_y"			value = "$(arg robot_1_y)"></arg>
+			<arg name = "robot_1_z"			value = "$(arg robot_1_z)"></arg>
+			<arg name = "fanuc_arm_controller_path"       value = "$(arg fanuc_arm_controller_path)"></arg>
+			<arg name = "joint_state_controller_path"     value = "$(arg joint_state_controller_path)"></arg>
+			<arg name = "fanuc_gripper_controller_path"   value = "$(arg fanuc_gripper_controller_path)"></arg>
+			<arg name = "gazebo_pid_path"                 value = "$(arg gazebo_pid_path)"></arg>
+		</include>
+
+		<!--start image viewer node-->
+		<group if="$(arg imageViewer)">
+			<node name="image_view" pkg="image_view" type="image_view" output="screen">
+				<remap from="image" to="/$(arg imageTopic)"/>
+			</node>
+		</group> 
+
+		<!--start image recorder node-->
+		<group if="$(arg imageRecorder)">
+			<node name="image_recorder" pkg="image_view" type="video_recorder" output="screen">
+				<remap from="image" 		to="/$(arg imageTopic)"/>
+				<param name = "filename"	value = "/home/ros/Desktop/robot_vision_ws/$(arg robot1_name)_ToolCameraVideo.avi"></param>
+				<param name = "fps" 		value = "24"></param>
+				<param name = "codec"		value = "MJPG"></param>
+				<param name = "encoding" 	value = "bgr8"></param>
+			</node>
+		</group>
+
+		<!-- rqt_console tools -->
+		<group if="$(arg rqt)">
+			<node pkg="rqt_console" name="rqt_console" type="rqt_console">
+			</node>
+		</group>
+
+		<!-- finally start a node which will save image and the pose in the given directory -->
+		<include file="$(find gazebo_camera_calibration)/launch/extrinsicCalibration.launch">		
+			<arg name = "fromFrame"    		value = "tool_gripper_tip"></arg>
+			<arg name = "toFrame"      		value = "base_link"></arg>
+			<arg name = "savePath" 		value = "/home/ros/Desktop/robot_vision_ws/src/0_camera_calibration/output_extrinsic_calibration_images_poses/"></arg>
+			<arg name = "cameraImageTopic"	value = "/$(arg imageTopic)"></arg>
+			<arg name = "publishPoseMarker" 	value = "1"></arg>
+		</include>		
+	</group>	
+</launch>

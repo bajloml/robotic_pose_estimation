@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!-- launch robot, object and camera-->
+	<include file="$(find gazebo_sim)/launch/robot_model.launch">
+	</include>
+	
+	<!-- launch object in camera publisher node -->
+	<include file="$(find 0_object_pose_publisher)/launch/object_pose_publisher.launch">
+	</include> 
+	
+	<!-- launch object in base publisher node -->
+	<include file="$(find 0_robot_control)/launch/base_object_publisher.launch">
+	</include>
+
+</launch>

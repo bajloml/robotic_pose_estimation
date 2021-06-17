@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!--*******************************************GAZEBO WORLD PARAMETERS ***********************************************************-->
+	<arg name="paused" 							value = "true"></arg>
+	<arg name="use_sim_time" 					value = "true"></arg>
+	<arg name="gazebo_gui" 						value = "true"></arg>
+	<arg name="gazebo_debug"					value = "false"></arg>
+	<arg name="verbose" 						value = "true"></arg>
+
+	<!--********************************************VIEWER, RECORDER, DEBUGGING ******************************************************-->
+	<arg name="imageViewer"						value = "true"></arg>	<!--start image_viewer node	-->
+	<arg name="imageRecorder"					value = "true"></arg>	<!--start image recorder node	-->
+	<arg name="rqt"								value = "false"></arg>	<!--start rqt gui tools node	-->
+	
+	<!--******************************************** CHOOSE ROBOT CONTROLLERS ********************************************************-->
+	<arg name="useVelocityTrajControllers"		value = "false"></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
+	<arg name="useVelocityGroupController"		value = "false" ></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
+																
+	<!--******************************************** ROBOT CONTROLLERS PATH **********************************************************-->
+	<!-- 											 set the controller path 														  -->
+	<arg name="fanuc_arm_controller_path" 		value="$(find robot_gripper_model)/config/velTrajectory Controllers/arm_controller.yaml"  	if = "$(arg useVelocityTrajControllers)"></arg>
+	<arg name="fanuc_arm_controller_path" 		value="$(find robot_gripper_model)/config/velGroupControllers/arm_controller.yaml"  		if = "$(arg useVelocityGroupController)"></arg>
+	<arg name="fanuc_arm_controller_path" 		value="$(find robot_gripper_model)/config/effortControllers/arm_controller.yaml" 			unless = "$(eval (useVelocityTrajControllers or useVelocityGroupController))"></arg>
+
+	<arg name="joint_state_controller_path"   	value="$(find robot_gripper_model)/config/joint_state_controller.yaml"></arg>
+	<arg name="fanuc_gripper_controller_path" 	value="$(find robot_gripper_model)/config/gripper_controller.yaml"></arg>
+	<arg name="gazebo_pid_path" 			  	value="$(find robot_gripper_model)/config/gazebo_pid.yaml"></arg>
+
+	<!--********************************** URDF/XACRO PATH, ROBOT NAME AND SPAWN POSITION ********************************************-->
+	<arg name="xacro_path"						value = "$(find robot_gripper_model)/urdf/m16ib20_simulation.xacro"></arg>
+	<arg name="robot1_name"						value = "fanuc_1"></arg>
+	<arg name="robot_1_x"						value = "0"></arg>
+	<arg name="robot_1_y"						value = "0"></arg>
+	<arg name="robot_1_z"						value = "0.001"></arg>
+
+
+	<!--*************WORLD************************************************************************************************************-->
+	<arg name="worldName" value="$(find gazebo_sim)/worlds/thorHammer.world"></arg>
+
+	<!-- STARTUP SIMULATED WORLD -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" 			value = "$(arg worldName)"></arg>
+		<arg name="paused" 				value = "$(arg paused)"></arg>
+		<arg name="use_sim_time" 		value = "$(arg use_sim_time)"></arg>
+		<arg name="gui" 				value = "$(arg gazebo_gui)"></arg>
+		<arg name="debug" 				value = "$(arg gazebo_debug)"></arg>
+		<arg name="verbose" 			value = "$(arg verbose)"></arg>
+	</include>
+	
+	<!--ROBOT 1, SPAWN URDF, CONTROLLERS AND MOVEGROUP UNDER NAMESPACE  -->
+	<!-- SPAWN A ROBOT IN THE WORLD AND LAUNCH THE MOVEGROUP -->
+	<!--if true load velocity controller, otherwise load effort controllers-->
+	<!--if true load velocity controller, otherwise load effort controllers-->	
+	<include file = "$(find robot_gripper_model)/launch/robotCameraGripper_model.launch">
+		<arg name = "xacro_path"                    value = "$(arg xacro_path)"></arg>
+		<arg name = "robot_name"	                value = "$(arg robot1_name)"></arg>
+		<arg name = "useVelocityTrajControllers"    value = "$(arg useVelocityTrajControllers)"></arg>	
+		<arg name = "useVelocityGroupController"    value = "$(arg useVelocityTrajControllers)"></arg>	
+		<arg name = "robot_1_x"					    value = "$(arg robot_1_x)"></arg>
+		<arg name = "robot_1_y"			    	    value = "$(arg robot_1_y)"></arg>
+		<arg name = "robot_1_z"			    	    value = "$(arg robot_1_z)"></arg>
+		<arg name = "fanuc_arm_controller_path"     value = "$(arg fanuc_arm_controller_path)"></arg>
+		<arg name = "joint_state_controller_path"   value = "$(arg joint_state_controller_path)"></arg>
+		<arg name = "fanuc_gripper_controller_path" value = "$(arg fanuc_gripper_controller_path)"></arg>
+		<arg name = "gazebo_pid_path"               value = "$(arg gazebo_pid_path)"></arg>
+	</include>
+
+	<!--start image viewer node-->
+	<group if="$(arg imageViewer)">
+		<node name="image_view" pkg="image_view" type="image_view" output="screen">
+			<remap from="image" to="/$(arg robot1_name)/cameraEyeInHand/image_raw"/>
+		</node>
+	</group> 
+
+	<!--start image recorder node-->
+	<group if="$(arg imageRecorder)">
+		<node name="image_recorder" pkg="image_view" type="video_recorder" output="screen">
+			<remap from="image" 			to="/$(arg robot1_name)/cameraEyeInHand/image_raw"/>
+			<param name = "filename"		value = "/home/ros-industrial/Desktop/ROS_WS/$(arg robot1_name)_ToolCameraVideo.avi"></param>
+			<param name = "fps" 			value = "23"></param>
+			<param name = "codec"			value = "MJPG"></param>
+			<param name = "encoding" 		value = "bgr8"></param>
+		</node>
+	</group>
+
+	<!-- rqt_console tools -->
+	<group if="$(arg rqt)">
+		<node pkg="rqt_console" name="rqt_console" type="rqt_console">
+		</node>
+	</group>		
+</launch>

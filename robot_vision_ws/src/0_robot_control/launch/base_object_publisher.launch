@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<arg name = "END_EFFECTOR_LINK"		default = "tool_gripper_tip"></arg>
+	<arg name = "CAMERA_LINK" 			default = "fixed_camera_lense" ></arg>
+	<arg name = "CAMERA_FRAME" 			default = "camera" ></arg>
+	<arg name = "OBJECT" 				default = "thor" ></arg>
+	<arg name = "OBJECT_TO_PUBLISH" 	default = "thor_in_base" ></arg>
+	<arg name = "REFERENCE_FRAME"		default = "base_link" ></arg>
+	<arg name = "ROBOT_NAME" 			default = "fanuc_1" ></arg>
+	<arg name = "_output_screen"		default = "screen"></arg>	
+
+	<!-- start base object publisher node -->
+	<node name="base_object_publisher_$(arg OBJECT)" pkg="0_robot_control" type="base_object_publisher" output="$(arg _output_screen)">
+		<param name = "END_EFFECTOR_LINK" 	value = "$(arg END_EFFECTOR_LINK)"></param>
+		<param name = "CAMERA_LINK" 		value = "$(arg CAMERA_LINK)" ></param>
+		<param name = "CAMERA_FRAME" 		value = "$(arg CAMERA_FRAME)" ></param>
+		<param name = "OBJECT" 				value = "$(arg OBJECT)" ></param>
+		<param name = "OBJECT_TO_PUBLISH" 	value = "$(arg OBJECT_TO_PUBLISH)" ></param>
+		<param name = "REFERENCE_FRAME" 	value = "$(arg REFERENCE_FRAME)" ></param>
+		<param name = "ROBOT_NAME" 			value = "$(arg ROBOT_NAME)" ></param>
+	</node>
+
+</launch>
