@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     /*ONLY FOR DEBUG  */
     std::string _PLANNING_GROUP     = "robot_arm";
     std::string _APPROACH_AXIS      = "x";
-    std::string _SRDF = "/home/ros/Desktop/robot_vision_ws/src/0_robot_and_gripper_models/moveit_robot_gripper_camera/config/fanuc_m16ib20.srdf";
+    std::string _SRDF               = "/home/ros-industrial/Desktop/robot_vision_ws/src/0_robot_and_gripper_models/moveit_robot_gripper_camera/config/fanuc_m16ib20.srdf";
     std::string _PLANNER_ID         = "RRT";
     std::string _END_EFFECTOR_LINK  = "tool_gripper_tip";
     std::string _OBJECT             = "thor";
@@ -90,7 +90,9 @@ int main(int argc, char *argv[])
       
       //first send robot to home position
       std::cout << "--------------------------------Moving to home position!--------------------------------------" << std::endl;
-      moveGroupTest.toHome( _SRDF);
+      std::cout << "srdf_file in robot_control" <<std::endl;
+      std::cout << _SRDF <<std::endl;
+      moveGroupTest.toHome(_SRDF);
       std::cout << "----------------------------------------------------------------------------------------------" << std::endl;
 
       while(ros::ok() && n->ok()){

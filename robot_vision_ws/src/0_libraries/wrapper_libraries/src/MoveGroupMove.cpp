@@ -1,9 +1,5 @@
 
 #include "wrapper_libraries/MoveGroupMove.h"
-//pugixml parser
-#include <pugixml.hpp>
-//moveit shapes
-#include <geometric_shapes/shape_operations.h>
 
 MoveGroupMove::MoveGroupMove(const std::string &planningGroup,
                              const std::string &referenceFrame,
@@ -28,11 +24,17 @@ MoveGroupMove::MoveGroupMove(const std::string &planningGroup,
         
         _move_group.setGoalPositionTolerance(0.001);
         _move_group.setGoalOrientationTolerance(0.001);
+        _move_group.setMaxVelocityScalingFactor(0.02);
         
         _move_group.setPlannerId(_plannerId);
     }
 
 MoveGroupMove::~MoveGroupMove(){}
+
+const ptree& MoveGroupMove::empty_ptree(){
+    static ptree t;
+    return t;
+}
 
 std::vector<double> MoveGroupMove::getJointStates(){
 
@@ -187,43 +189,35 @@ void MoveGroupMove::moveUsingGrasp( std::string ROBOT_NAME,
 }
 
 //read "home" position from srdf file and send robot there
-void MoveGroupMove::toHome(std::string srdf_path){   
-    const std::string val = "value";
-    const char* val_c = val.c_str();
+void MoveGroupMove::toHome(std::string srdf_path){
 
     std::vector<double> joints;
-    pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_file(srdf_path.c_str());
-    if (!result){
-        std::cout << "Given SRDF file doesn't exist!!!" << std::endl;
-        return;
-    }
-    else{
-        //std::cout << "Given SRDF file exist" << std::endl;
-    }
-    pugi::xml_node robot = doc.child("robot");
-    pugi::xml_node group_state = robot.child("group_state");
-    pugi::xml_node home_pose_node;
+    ptree pt;
 
-    //first find child group state with name "home"
-    for (pugi::xml_node node = robot.first_child(); node; node = node.next_sibling()){
-        //if node name is "home" and node attribute name is "group_state" then we have correct node
-        if(std::string(node.name())=="group_state" && std::string(node.first_attribute().value()) == "home"){
-            home_pose_node=node;
-            break;
-        }
-    }
-    //fill vector with joint values from srdf file
-    for (pugi::xml_node joint = home_pose_node.first_child(); joint; joint = joint.next_sibling()){
-        if(std::string(joint.name())=="joint"){
-                const pugi::char_t *val = joint.attribute(val_c).value();
-                joints.push_back(atof(val));
-        }
-    }
+    try{
+        read_xml(srdf_path, pt, boost::property_tree::xml_parser::trim_whitespace);
 
-    //send move group to home position
-    _move_group.setJointValueTarget(joints);
-    _move_group.move();
+        const ptree & joints_xml = pt.get_child("robot.group_state", empty_ptree());
+
+        BOOST_FOREACH (const ptree::value_type & node, joints_xml){
+
+            const ptree & attributes = node.second.get_child("<xmlattr>", empty_ptree());
+
+            BOOST_FOREACH(const ptree::value_type &v, attributes){
+                if(std::string(v.first.data()) == "value"){
+                    joints.push_back(std::stod(v.second.data()));
+                }
+            }
+        }
+
+        //send move group to home position
+        _move_group.setJointValueTarget(joints);
+        _move_group.move();
+
+    }
+    catch (...){
+        std::cout << "Given SRDF file doesn't exist!!!"<<std::endl;
+    }
 }
 
 void MoveGroupMove::moveUsingJointState(geometry_msgs::Pose &pose){
@@ -255,72 +249,5 @@ void MoveGroupMove::moveUsingJointState(geometry_msgs::Pose &pose){
     return;
 
 }
-
-
-//Planning scene handler class
-PlanningSceneHandler::PlanningSceneHandler( std::string referenceFrame,std::string _planningTopic):
-                                            _refFrame{referenceFrame},
-                                            _planningTopic{_planningTopic}{   
-    ROS_INFO("CONSTRUCTING PLANNING HANDLER---------------------------------------------------------");
-    _planningSceneDiffPublisher = _nodeHandle.advertise<moveit_msgs::PlanningScene>(_planningTopic, 1);
-    ROS_INFO("PLANNING HANDLER ADVERTISED ON TOPIC");
-}
-
-PlanningSceneHandler::~PlanningSceneHandler(){}
-
-//void PlanningSceneHandler::addObject( std::string _objectName, std::string _meshModelPath, geometry_msgs::Pose _collisionObjectPose)
-void PlanningSceneHandler::addObject( std::string _objectName, geometry_msgs::Pose _collisionObjectPose){
-
-    moveit_msgs::CollisionObject co;
-
-    //shapes::Mesh* m = shapes::createMeshFromResource(_meshModelPath); 
-    //ROS_INFO("mesh loaded");
-    shape_msgs::Mesh co_mesh;
-    shapes::ShapeMsg co_mesh_msg;  
-    //shapes::constructMsgFromShape(m, co_mesh_msg);
-
-    /*co_mesh = boost::get<shape_msgs::Mesh>(co_mesh_msg);  
-    co.meshes.resize(1);
-    co.mesh_poses.resize(1);
-    co.meshes[0] = co_mesh;
-    co.header.frame_id = _refFrame;
-    co.id = _objectName;
-
-    // add position and orientation to mesh 
-    co.mesh_poses[0].position.x = _collisionObjectPose.position.x;
-    co.mesh_poses[0].position.y = _collisionObjectPose.position.y;
-    co.mesh_poses[0].position.z = _collisionObjectPose.position.z;
-    co.mesh_poses[0].orientation.w = _collisionObjectPose.orientation.w;
-    co.mesh_poses[0].orientation.x = _collisionObjectPose.orientation.x;
-    co.mesh_poses[0].orientation.y = _collisionObjectPose.orientation.y;
-    co.mesh_poses[0].orientation.z = _collisionObjectPose.orientation.z;  */
-
-    //co.meshes.push_back(co_mesh);
-    //co.mesh_poses.push_back(co.mesh_poses[0]);
-
-    /* Define a box to be attached */
-    shape_msgs::SolidPrimitive primitive;
-    primitive.type = primitive.BOX;
-    primitive.dimensions.resize(3);
-    primitive.dimensions[0] = 0.1;
-    primitive.dimensions[1] = 0.1;
-    primitive.dimensions[2] = 0.1;
-
-    co.header.frame_id = _refFrame;
-    co.id = _objectName;
-
-    co.primitives.push_back(primitive);
-    co.primitive_poses.push_back(_collisionObjectPose);
-    co.operation = co.ADD;
-
-    //delete everything from planning scene and add collision object on the planning scene
-    _planningScene.world.collision_objects.clear();
-    _planningScene.world.collision_objects.push_back(co);
-    _planningScene.is_diff=true;
-    //using planning scene difference
-    _planningSceneDiffPublisher.publish(_planningScene);
-    
-}
-
 
 

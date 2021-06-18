@@ -32,6 +32,8 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(OpenCV 4.2.0 REQUIRED)
 
+find_package( Boost 1.40 COMPONENTS program_options REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -76,8 +78,9 @@ catkin_package(
 include_directories(
   include
   ${OpenCV_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
-  /home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/
+  #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/
 )
 
 add_library(${PROJECT_NAME}
@@ -87,10 +90,11 @@ add_library(${PROJECT_NAME}
             src/Intrinsic_Cal.cpp
             src/MoveGroupMove.cpp
             src/RobotGripper.cpp
-            /home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.cpp
-            /home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.hpp)
+            #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.cpp
+            #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.hpp
+            )
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Eigen3::Eigen ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Eigen3::Eigen ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 
 #############
 ## Install ##

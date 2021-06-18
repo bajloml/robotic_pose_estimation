@@ -4,13 +4,12 @@
 
 	<arg name="PLANNING_GROUP"		default="robot_arm"></arg>
 	<arg name="PLANNER_ID"			default="LBKPIECE"></arg>
-	<arg name="END_EFFECTOR_LINK"		default="tool_gripper_tip"></arg>       
+	<arg name="END_EFFECTOR_LINK"	default="tool_gripper_tip"></arg>       
 	<arg name="REFERENCE_FRAME"		default="base_link"></arg>   
 	<arg name="_approach_axis"		default="x"></arg>
-	<arg name="srdf_file"			default="/home/ros/Desktop/robot_vision_ws/src/0_robot_and_gripper_models/moveit_robot_gripper_camera/config/fanuc_m16ib20.srdf"></arg>
-	<arg name="_retreat_axis"		default="-x"></arg>
+	<arg name="srdf_file"			default="/home/ros-industrial/Desktop/robot_vision_ws/src/0_robot_and_gripper_models/moveit_robot_gripper_camera/config/fanuc_m16ib20.srdf"></arg>
 	<arg name="_prepos_offset"		default="0.3"></arg>
-	<arg name="_OBJECT"			default="thor"></arg>
+	<arg name="_OBJECT"				default="thor"></arg>
 	<arg name="_x_offset"			default="-0.2"></arg>
 	<arg name="_y_offset"			default="0.0"></arg>
 	<arg name="_z_offset"			default="0.2"></arg>
@@ -21,13 +20,12 @@
 	<node name="robot_control_$(arg _OBJECT)" pkg="0_robot_control" type="robot_control" output="$(arg _output_screen)">
 		<param name = "PLANNING_GROUP" 			value = "$(arg PLANNING_GROUP)"></param>
 		<param name = "PLANNER_ID" 				value = "$(arg PLANNER_ID)"></param>
-		<param name = "END_EFFECTOR_LINK" 			value = "$(arg END_EFFECTOR_LINK)"></param>
-		<param name = "REFERENCE_FRAME" 			value = "$(arg REFERENCE_FRAME)"></param>
-		<param name = "approachAxis" 				value = "$(arg _approach_axis)"></param>
+		<param name = "END_EFFECTOR_LINK" 		value = "$(arg END_EFFECTOR_LINK)"></param>
+		<param name = "REFERENCE_FRAME" 		value = "$(arg REFERENCE_FRAME)"></param>
+		<param name = "approachAxis" 			value = "$(arg _approach_axis)"></param>
 		<param name = "srdf_file" 				value = "$(arg srdf_file)"></param>
-		<param name = "retreatAxis" 				value = "$(arg _retreat_axis)"></param>
 		<param name = "_prepos_offset" 			value = "$(arg _prepos_offset)" ></param>
-		<param name = "OBJECT" 				value = "$(arg _OBJECT)" ></param>
+		<param name = "OBJECT" 					value = "$(arg _OBJECT)" ></param>
 		<param name = "_x_offset" 				value = "$(arg _x_offset)" ></param>
 		<param name = "_y_offset" 				value = "$(arg _y_offset)" ></param>
 		<param name = "_z_offset" 				value = "$(arg _z_offset)" ></param>

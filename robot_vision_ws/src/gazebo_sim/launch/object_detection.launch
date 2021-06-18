@@ -13,4 +13,11 @@
 	<include file="$(find 0_robot_control)/launch/base_object_publisher.launch">
 	</include>
 
+	<!-- launch robot control node
+		wait until the object if found and then:
+		 - type thor and the robot should go to the position
+		 - type home to go to home position -->
+	<include file="$(find 0_robot_control)/launch/robot_control.launch">
+	</include>
+
 </launch>

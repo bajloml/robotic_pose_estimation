@@ -2,12 +2,13 @@
 
 <launch>
 	<arg name="paused" 			default="true"></arg>
-	<arg name="use_sim_time" 		default="true"></arg>
+	<arg name="use_sim_time" 	default="true"></arg>
 	<arg name="gazebo_gui" 		default="true"></arg>
-	<arg name="gazebo_debug"		default="false"></arg>
+	<arg name="gazebo_debug"	default="false"></arg>
 
-	<arg name="imageViewer"				default="true"></arg>	<!--start image_viewer node	-->
-	<arg name="imageTopic"					value = "/fanuc_1/fixed_camera_pcl/image_raw"></arg> <!--camera topic	-->
+	<arg name="imageViewer"						default="true"></arg>	<!--start image_viewer node	-->
+	<arg name="imageRecorder"					default="true"></arg>	<!--start image_viewer node	-->
+	<arg name="imageTopic"						value = "/fanuc_1/fixed_camera_pcl/image_raw"></arg> <!--camera topic	-->
 	<arg name="useVelocityTrajControllers"		default="true"></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
 	<arg name="useVelocityGroupController"		default="false" ></arg>	<!--if true load velocity controller, otherwise load effort controllers-->
 																
@@ -72,5 +73,16 @@
 			<remap from="image" to="/$(arg imageTopic)"/>
 		</node>
 	</group> 
+
+	<!--start image recorder node-->
+	<group if="$(arg imageRecorder)">
+		<node name="image_recorder" pkg="image_view" type="video_recorder" output="screen">
+			<remap from="image" 			to="/$(arg imageTopic)"/>
+			<param name = "filename"		value = "/home/ros-industrial/Desktop/robot_vision_ws/$(arg robot1_name)_ToolCameraVideo.avi"></param>
+			<param name = "fps" 			value = "2"></param>
+			<param name = "codec"			value = "MJPG"></param>
+			<param name = "encoding" 		value = "bgr8"></param>
+		</node>
+	</group>
 
 </launch>

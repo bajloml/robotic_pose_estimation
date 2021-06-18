@@ -26,7 +26,7 @@
   </include>
   -->
   <include>
-    <uri>model://thor_hammer_tensorflow</uri>
+    <uri>model://thorHammer</uri>
     <name>thor_hammer_tensorflow</name>
     <pose> 1.06 0.002 0.78 -1.37 -0.19 -0.38</pose>
   </include>

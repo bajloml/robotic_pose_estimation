@@ -1,0 +1,13 @@
+material circlegrid
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture circlegrid.png
+      }
+    }
+  }
+}

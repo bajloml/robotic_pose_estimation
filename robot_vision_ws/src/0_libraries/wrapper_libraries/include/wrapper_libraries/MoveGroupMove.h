@@ -24,6 +24,11 @@
 #include <geometry_msgs/Twist.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/foreach.hpp>
+using boost::property_tree::ptree;
+
 class MoveGroupMove{
 
     private:
@@ -43,6 +48,7 @@ class MoveGroupMove{
 
         std::vector<double> getJointStates();
         robot_state::RobotStatePtr getCurrentRobotState();
+        const ptree& empty_ptree();
         void moveUsingSetPoseTarget(const geometry_msgs::Pose& , moveit::planning_interface::MoveItErrorCode& );
         void moveUsingSetPoseTargets(const std::vector<geometry_msgs::Pose>& , moveit::planning_interface::MoveItErrorCode& );
         void toHome(std::string srdf_path);
@@ -53,22 +59,4 @@ class MoveGroupMove{
         void moveUsingGrasp( std::string ROBOT_NAME, std::string REFERENCE_FRAME, const geometry_msgs::Pose &wantedPose, 
                              const char* approachAxis, double approachDirection, const char* retreatAxis, double retreatDirection);
         void moveUsingJointState(geometry_msgs::Pose&);
-};
-
-class PlanningSceneHandler{
-
-    private:
-        std::string _refFrame, _planningTopic;
-        ros::Publisher _planningSceneDiffPublisher;
-        ros::NodeHandle _nodeHandle;
-        moveit_msgs::PlanningScene _planningScene;
-        //moveit::planning_interface::PlanningSceneInterface current_scene;
-
-    public:
-        PlanningSceneHandler(std::string, std::string);
-        ~PlanningSceneHandler();
-
-        //methods
-        //void addObject(std::string, std::string, geometry_msgs::Pose);
-        void addObject(std::string, geometry_msgs::Pose);
 };
