@@ -80,7 +80,6 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
-  #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/
 )
 
 add_library(${PROJECT_NAME}
@@ -90,8 +89,6 @@ add_library(${PROJECT_NAME}
             src/Intrinsic_Cal.cpp
             src/MoveGroupMove.cpp
             src/RobotGripper.cpp
-            #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.cpp
-            #/home/ros/Desktop/robot_vision_ws/src/pugixml/pugixml/src/pugixml.hpp
             )
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} Eigen3::Eigen ${Boost_LIBRARIES} ${catkin_LIBRARIES})
